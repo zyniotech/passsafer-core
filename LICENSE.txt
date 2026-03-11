@@ -1,0 +1,193 @@
+================================================================================
+                           PASSSAFER LICENSE AGREEMENT
+                                  Version 1.5.0
+================================================================================
+
+This software is NOT open source. The source code provided in the GitHub 
+repository is strictly made "Source-Available" for transparency and 
+security auditing purposes ONLY. 
+You are NOT permitted to copy, compile, modify, redistribute, or use this 
+code (in whole or in part) for any personal, commercial, or non-commercial 
+purposes. All rights are fully reserved by Zynio Tech.
+
+
+IMPORTANT - PLEASE READ THIS LICENSE AGREEMENT CAREFULLY!
+
+This Software License Agreement ("License") is a legally binding contract between 
+you (the end-user or representative of the entity installing this software) and 
+Zynio Tech ("Manufacturer").
+
+By installing, copying, or using this software, you agree to the terms of this 
+License. If you do not agree to these terms, do not install or use this software.
+
+================================================================================
+1. GRANT OF LICENSE
+================================================================================
+
+The Manufacturer grants you a non-exclusive, non-transferable license to use 
+PassSafer for personal use only under the terms of this License.
+
+This License permits you to:
+- Install the software on one or more personal computers
+- Use the software exclusively for personal purposes
+- Create a backup copy of the software for backup purposes
+
+================================================================================
+2. RESTRICTIONS
+================================================================================
+
+You are not permitted to:
+- Modify, alter, or create derivative works of the software
+- Decompile, disassemble, or reverse-engineer the software
+- Rent, lease, or distribute the software
+- Use the software commercially or resell it
+- Create and distribute copies of the software
+- Transfer or assign this License to third parties
+
+================================================================================
+3. INTELLECTUAL PROPERTY
+================================================================================
+
+The software is the exclusive property of the Manufacturer and is protected by 
+copyright, trademarks, and other laws.
+
+All rights, title, and ownership of the software remain with:
+  Zynio Tech
+  Website: https://payhip.com/ZynioTech
+  Email: zyniotech@gmail.com
+
+================================================================================
+4. NO WARRANTY (AS-IS)
+================================================================================
+
+The software is provided "AS IS" WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, 
+INCLUDING BUT NOT LIMITED TO:
+
+- Warranties of merchantability
+- Warranties of fitness for a particular purpose
+- Warranties of non-infringement of third-party rights
+- Warranties of accuracy or completeness
+
+The Manufacturer does not guarantee that the software:
+- Is error-free
+- Operates uninterrupted
+- Meets all your requirements
+- Is compatible with other software
+
+================================================================================
+5. LIMITATION OF LIABILITY
+================================================================================
+
+IN NO EVENT SHALL THE MANUFACTURER BE LIABLE FOR:
+
+- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES
+- LOSS OF PROFITS, DATA LOSS, OR BUSINESS INTERRUPTION
+- DAMAGE TO HARDWARE, SOFTWARE, OR DATA
+- LOST PROFITS OR BUSINESS FAILURE
+- LOST REVENUE OR CUSTOMER LOSS
+
+This applies even if the Manufacturer has been advised of the possibility of 
+such damages.
+
+YOUR ENTIRE LIABILITY TO THE MANUFACTURER IS LIMITED TO THE AMOUNT YOU PAID 
+FOR THE SOFTWARE (IF APPLICABLE).
+
+================================================================================
+6. SECURITY AND DATA PROTECTION
+================================================================================
+
+IMPORTANT SECURITY NOTICES:
+
+- The software stores passwords locally on your computer
+- The Manufacturer does NOT store your passwords on any servers
+- You are solely responsible for the security of your Master Password
+- The Manufacturer is NOT liable for security breaches due to weak passwords
+- The Manufacturer is NOT liable for data loss
+- The Manufacturer is NOT liable for forgotten or lost Master Passwords
+
+⚠️ CRITICAL WARNING:
+
+If you forget your Master Password, you CANNOT access your passwords. There is 
+NO way to reset the Master Password. The Manufacturer CANNOT help and is NOT 
+liable for data loss in this case.
+
+YOUR RESPONSIBILITY:
+
+- Choose a strong, unique Master Password
+- Store your Master Password in a SECURE location (NOT on your computer!)
+- Create regular backups of your password data (using the Export function)
+- Use antivirus and anti-malware software
+- Keep your operating system up to date
+- Remember your Master Password or store it offline securely
+
+================================================================================
+7. TERMINATION
+================================================================================
+
+This License is valid until you terminate it or the Manufacturer terminates it.
+
+The Manufacturer may terminate this License immediately if you violate its terms.
+
+Upon termination, you must:
+- Uninstall the software
+- Delete all copies
+- Follow the uninstallation instructions
+
+================================================================================
+8. SOFTWARE MODIFICATIONS
+================================================================================
+
+The Manufacturer reserves the right to:
+- Modify or improve the software at any time
+- Release new versions
+- Add or remove features
+- Provide updates
+
+New versions are subject to this License unless otherwise stated.
+
+================================================================================
+9. EXPORT RESTRICTIONS
+================================================================================
+
+The software is a product of Switzerland. It may not be exported or re-exported 
+to countries under embargo measures, or to persons or organizations under 
+international sanctions.
+
+================================================================================
+11. CONTACT AND SUPPORT
+================================================================================
+
+For questions, problems, or feedback, please contact:
+
+  ZYNIO TECH
+  
+  Website: https://payhip.com/ZynioTech
+  Email: zyniotech@gmail.com
+
+
+================================================================================
+12. ENTIRE AGREEMENT
+================================================================================
+
+This License constitutes the entire agreement between you and the Manufacturer 
+regarding the software and supersedes all prior agreements, understandings, and 
+arrangements.
+
+If any provision of this License is invalid, the remaining provisions remain valid.
+
+================================================================================
+13. LANGUAGE
+================================================================================
+
+This License is available in English.
+
+================================================================================
+
+LAST UPDATED: February 10.3.2026
+
+BY CLICKING "ACCEPT" OR INSTALLING THE SOFTWARE, YOU ACCEPT ALL TERMS AND 
+CONDITIONS OF THIS LICENSE AGREEMENT.
+
+================================================================================
+                              END OF LICENSE
+================================================================================
