@@ -25,7 +25,7 @@ This repository contains **exclusively** the backend logic and the communication
 Do you want to use the full, ready-to-use app with its beautiful Dark Mode interface?
 
 **PassSafer is available at:**
-👉 https://payhip.com/b/Sl2Xo
+👉 https://zynio-tech.web.app
 
 ### Features of the full version:
 - Zero-Knowledge Architecture (Offline-First)
@@ -38,5 +38,6 @@ Do you want to use the full, ready-to-use app with its beautiful Dark Mode inter
 **IMPORTANT:** This repository is **not** under an Open Source license (like MIT/GPL).
 
 The source code is provided here **exclusively for transparency and auditing purposes**. Copying, modifying, compiling, reselling, or any kind of commercial or non-commercial redistribution is strictly prohibited. It is **"All Rights Reserved"** by Zynio Tech.
+
 
 Please read the included `LICENSE.txt` for the full legal terms.
