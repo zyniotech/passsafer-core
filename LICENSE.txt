@@ -53,7 +53,7 @@ copyright, trademarks, and other laws.
 
 All rights, title, and ownership of the software remain with:
   Zynio Tech
-  Website: https://payhip.com/ZynioTech
+  Website: https://zynio-tech.web.app/
   Email: zyniotech@gmail.com
 
 ================================================================================
@@ -161,7 +161,7 @@ For questions, problems, or feedback, please contact:
 
   ZYNIO TECH
   
-  Website: https://payhip.com/ZynioTech
+  Website: https://zynio-tech.web.app/
   Email: zyniotech@gmail.com
 
 
@@ -183,7 +183,7 @@ This License is available in English.
 
 ================================================================================
 
-LAST UPDATED: February 10.3.2026
+LAST UPDATED: February 29.4.2026
 
 BY CLICKING "ACCEPT" OR INSTALLING THE SOFTWARE, YOU ACCEPT ALL TERMS AND 
 CONDITIONS OF THIS LICENSE AGREEMENT.
