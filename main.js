@@ -29,8 +29,17 @@ function createWindow() {
 
     mainWindow.loadFile('index.html');
     mainWindow.removeMenu(); // Menüleiste entfernen
-    // Dev Tools nur in Entwicklung
-    // mainWindow.webContents.openDevTools();
+
+    // [HOCH-01] DevTools aktiv blockieren in Production
+    mainWindow.webContents.on('devtools-opened', () => {
+        mainWindow.webContents.closeDevTools();
+    });
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.key === 'F12' ||
+            (input.control && input.shift && (input.key === 'I' || input.key === 'i'))) {
+            event.preventDefault();
+        }
+    });
 
     // Content Security Policy
     mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
@@ -69,51 +78,47 @@ async function ensureDataDir() {
     }
 }
 
-// Login Attempt Tracker
+// [HOCH-02] Login Attempt Tracker - Global (nicht Username-basiert, nicht umgehbar)
 class LoginAttemptTracker {
     constructor() {
-        this.attempts = {}; // { username: { count, lastAttempt } }
-        this.lockouts = {}; // { username: lockoutUntil }
+        this.count = 0;
+        this.lockoutUntil = 0;
         this.MAX_ATTEMPTS = 5;
         this.LOCKOUT_DURATION = 5 * 60 * 1000; // 5 Minutes
     }
 
-    recordAttempt(username) {
+    recordAttempt() {
         const now = Date.now();
 
         // Check if locked out
-        if (this.lockouts[username]) {
-            if (now < this.lockouts[username]) {
-                return false; // Still locked
-            } else {
-                delete this.lockouts[username]; // Lockout expired
-                delete this.attempts[username]; // Reset attempts after lockout
-            }
+        if (now < this.lockoutUntil) {
+            return false; // Still locked
         }
 
-        if (!this.attempts[username]) {
-            this.attempts[username] = { count: 0, lastAttempt: 0 };
+        // Reset after lockout expires
+        if (this.lockoutUntil > 0 && now >= this.lockoutUntil) {
+            this.lockoutUntil = 0;
+            this.count = 0;
         }
 
-        this.attempts[username].count++;
-        this.attempts[username].lastAttempt = now;
+        this.count++;
 
-        if (this.attempts[username].count >= this.MAX_ATTEMPTS) {
-            this.lockouts[username] = now + this.LOCKOUT_DURATION;
+        if (this.count >= this.MAX_ATTEMPTS) {
+            this.lockoutUntil = now + this.LOCKOUT_DURATION;
             return false;
         }
 
         return true;
     }
 
-    resetAttempts(username) {
-        delete this.attempts[username];
-        delete this.lockouts[username];
+    resetAttempts() {
+        this.count = 0;
+        this.lockoutUntil = 0;
     }
 
-    getRemainingLockoutTime(username) {
-        if (!this.lockouts[username]) return 0;
-        const remaining = this.lockouts[username] - Date.now();
+    getRemainingLockoutTime() {
+        if (!this.lockoutUntil) return 0;
+        const remaining = this.lockoutUntil - Date.now();
         return remaining > 0 ? remaining : 0;
     }
 }
@@ -139,55 +144,81 @@ function deriveKey(password, salt) {
     return crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
 }
 
-function deriveExportKey(password, salt) {
-    // Gleiche Parameter wie Python-Version
-    return crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
-}
-
+// [KRIT-02] AES-256-GCM Encryption (Authenticated Encryption)
 function encrypt(text, password, salt) {
     const key = deriveKey(password, salt);
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    const iv = crypto.randomBytes(12); // 12 bytes for GCM
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    return iv.toString('hex') + ':' + encrypted;
+    const authTag = cipher.getAuthTag().toString('hex');
+    return 'v2:' + iv.toString('hex') + ':' + authTag + ':' + encrypted;
 }
 
 function decrypt(encryptedData, password, salt) {
     const key = deriveKey(password, salt);
-    const parts = encryptedData.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
+
+    if (encryptedData.startsWith('v2:')) {
+        // GCM format: v2:iv:authTag:encrypted
+        const parts = encryptedData.substring(3).split(':');
+        const iv = Buffer.from(parts[0], 'hex');
+        const authTag = Buffer.from(parts[1], 'hex');
+        const encrypted = parts[2];
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+        decipher.setAuthTag(authTag);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    } else {
+        // Legacy CBC format: iv:encrypted (backward compatibility)
+        const parts = encryptedData.split(':');
+        const iv = Buffer.from(parts[0], 'hex');
+        const encrypted = parts[1];
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    }
 }
 
+// [KRIT-01] Export mit zufälligem Salt + GCM
 function encryptExport(text, password) {
-    // Festes Salt für Export (kompatibel mit Python implementation plan)
-    const exportSalt = Buffer.from('export_salt_for_passsafer_app_12345');
-    const key = deriveExportKey(password, exportSalt);
-
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    const exportSalt = crypto.randomBytes(32);
+    const key = crypto.pbkdf2Sync(password, exportSalt, 100000, 32, 'sha256');
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    return iv.toString('hex') + ':' + encrypted;
+    const authTag = cipher.getAuthTag().toString('hex');
+    return 'v2:' + exportSalt.toString('hex') + ':' + iv.toString('hex') + ':' + authTag + ':' + encrypted;
 }
 
 function decryptExport(encryptedData, password) {
-    const exportSalt = Buffer.from('export_salt_for_passsafer_app_12345');
-    const key = deriveExportKey(password, exportSalt);
-
-    const parts = encryptedData.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
-
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
+    if (encryptedData.startsWith('v2:')) {
+        // New format: v2:salt:iv:authTag:encrypted
+        const parts = encryptedData.substring(3).split(':');
+        const exportSalt = Buffer.from(parts[0], 'hex');
+        const iv = Buffer.from(parts[1], 'hex');
+        const authTag = Buffer.from(parts[2], 'hex');
+        const encrypted = parts[3];
+        const key = crypto.pbkdf2Sync(password, exportSalt, 100000, 32, 'sha256');
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+        decipher.setAuthTag(authTag);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    } else {
+        // Legacy format: iv:encrypted (fixed salt, CBC) - backward compatibility
+        const exportSalt = Buffer.from('export_salt_for_passsafer_app_12345');
+        const key = crypto.pbkdf2Sync(password, exportSalt, 100000, 32, 'sha256');
+        const parts = encryptedData.split(':');
+        const iv = Buffer.from(parts[0], 'hex');
+        const encrypted = parts[1];
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    }
 }
 
 async function setSecurePermissions(filePath) {
@@ -240,12 +271,12 @@ ipcMain.handle('register', async (event, { username, password, pin }) => {
     }
 });
 
-// Login
+// Login - [HOCH-02] Globaler Brute-Force-Schutz (nicht username-basiert)
 ipcMain.handle('login', async (event, { username, password, pin }) => {
     try {
-        // Brute Force Schutz
-        if (!loginTracker.recordAttempt(username)) {
-            const remaining = Math.ceil(loginTracker.getRemainingLockoutTime(username) / 1000);
+        // Brute Force Schutz - global, nicht umgehbar durch Username-Wechsel
+        if (!loginTracker.recordAttempt()) {
+            const remaining = Math.ceil(loginTracker.getRemainingLockoutTime() / 1000);
             const minutes = Math.floor(remaining / 60);
             const seconds = remaining % 60;
             return { success: false, error: `Zu viele Versuche. Bitte warte ${minutes}m ${seconds}s.` };
@@ -258,7 +289,7 @@ ipcMain.handle('login', async (event, { username, password, pin }) => {
         const pinValid = verifyPassword(pin, pinData.hash, pinData.salt);
 
         if (masterValid && pinValid) {
-            loginTracker.resetAttempts(username);
+            loginTracker.resetAttempts();
             return { success: true };
         } else {
             return { success: false, error: 'Ungültige Zugangsdaten' };
@@ -373,7 +404,7 @@ ipcMain.handle('export-passwords', async (event, { password, filePath, data }) =
         if (!filePath.toLowerCase().endsWith('.pass')) {
             return { success: false, error: 'Invalid file type. Only .pass files are allowed.' };
         }
-        // Verschlüssele Daten mit Export-Passwort und festem Salt
+        // Verschlüssele Daten mit Export-Passwort und zufälligem Salt
         const encrypted = encryptExport(JSON.stringify(data), password);
         await fs.writeFile(filePath, encrypted);
         return { success: true };
@@ -398,15 +429,18 @@ ipcMain.handle('import-passwords', async (event, { password, filePath }) => {
     }
 });
 
-// Account löschen
-ipcMain.handle('delete-account', async (event, { password }) => {
+// [HOCH-03] Account löschen - jetzt mit PIN-Verifikation
+ipcMain.handle('delete-account', async (event, { password, pin }) => {
     try {
-        // Verifiziere Passwort vor dem Löschen
+        // Verifiziere Passwort UND PIN vor dem Löschen
         const masterData = JSON.parse(await fs.readFile(MASTER_HASH_FILE, 'utf8'));
-        const masterValid = verifyPassword(password, masterData.hash, masterData.salt);
+        const pinData = JSON.parse(await fs.readFile(PIN_HASH_FILE, 'utf8'));
 
-        if (!masterValid) {
-            return { success: false, error: 'Invalid password' };
+        const masterValid = verifyPassword(password, masterData.hash, masterData.salt);
+        const pinValid = verifyPassword(pin, pinData.hash, pinData.salt);
+
+        if (!masterValid || !pinValid) {
+            return { success: false, error: 'Invalid credentials' };
         }
 
         // Lösche alle Daten
@@ -427,13 +461,21 @@ ipcMain.handle('delete-account', async (event, { password }) => {
     }
 });
 
-// Path safety check - prevent access to critical system directories
+// [HOCH-04] Path safety check - verbessert gegen Traversal und UNC
 function isPathSafe(filePath) {
     const resolved = path.resolve(filePath);
+
+    // Block UNC paths (network shares)
+    if (resolved.startsWith('\\\\') || resolved.startsWith('//')) return false;
+
+    // Block path traversal attempts
+    if (filePath.includes('..')) return false;
+
     const dangerous = [
         path.join(process.env.SystemRoot || 'C:\\Windows'),
         path.join(process.env.ProgramFiles || 'C:\\Program Files'),
         path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)'),
+        '/usr', '/etc', '/bin', '/sbin', '/var', '/sys', // Linux/Mac paths
         DATA_DIR // Protect own data directory
     ].map(p => p.toLowerCase());
     const resolvedLower = resolved.toLowerCase();
@@ -447,6 +489,7 @@ ipcMain.handle('read-file', async (event, filePath) => {
             return { success: false, error: 'Access to this location is not allowed.' };
         }
         const stats = await fs.stat(filePath);
+        // [MITTEL-06] Fix: Kommentar und Code stimmen jetzt überein
         const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
         if (stats.size > MAX_FILE_SIZE) {
             return { success: false, error: `File too large. Maximum size is 100 MB.` };
